@@ -1,47 +1,95 @@
-# Astro Starter Kit: Minimal
+# Astro minimal project with view transitions
 
+See https://docs.astro.build/en/guides/view-transitions/.
+
+Total generated JS (it is in `<script type="module">` tag on every page):
+
+```js
+let o = history.state?.index || 0;
+history.state || history.replaceState({
+    index: o
+}, document.title);
+const m = !!document.startViewTransition,
+    s = () => !!document.querySelector('[name="astro-view-transitions-enabled"]');
+async function y(e) {
+    const t = await fetch(e),
+        n = await t.text();
+    return {
+        ok: t.ok,
+        html: n
+    }
+}
+
+function f() {
+    const e = document.querySelector('[name="astro-view-transitions-fallback"]');
+    return e ? e.getAttribute("content") : "animate"
+}
+const g = new DOMParser;
+async function d(e, t, n) {
+    const a = g.parseFromString(t, "text/html");
+    a.documentElement.dataset.astroTransition = e;
+    const i = () => document.documentElement.replaceWith(a.documentElement),
+        c = Array.from(a.querySelectorAll("head link[rel=stylesheet]")).map(r => new Promise(h => {
+            const l = r.cloneNode();
+            ["load", "error"].forEach(p => l.addEventListener(p, h)), document.head.append(l)
+        }));
+    if (c.length && await Promise.all(c), n === "animate") {
+        let r = !1;
+        addEventListener("animationstart", () => r = !0, {
+            once: !0
+        }), document.documentElement.dataset.astroTransitionFallback = "old", a.documentElement.dataset.astroTransitionFallback = "new", addEventListener("animationend", i, {
+            once: !0
+        }), setTimeout(() => !r && i())
+    } else i()
+}
+async function u(e, t) {
+    let n;
+    const {
+        html: a,
+        ok: i
+    } = await y(t);
+    if (!i) {
+        location.href = t;
+        return
+    }
+    m ? n = document.startViewTransition(() => d(e, a)).finished : n = d(e, a, f());
+    try {
+        await n
+    } finally {
+        document.documentElement.removeAttribute("data-astro-transition")
+    }
+}
+
+function E(e) {
+    if (document.querySelector(`link[rel=prefetch][href="${e}"]`)) return;
+    if (navigator.connection) {
+        let n = navigator.connection;
+        if (n.saveData || /(2|3)g/.test(n.effectiveType || "")) return
+    }
+    let t = document.createElement("link");
+    t.setAttribute("rel", "prefetch"), t.setAttribute("href", e), document.head.append(t)
+}(m || f() !== "none") && (document.addEventListener("click", e => {
+    let t = e.target;
+    t instanceof Element && t.tagName !== "A" && (t = t.closest("a")), t && t instanceof HTMLAnchorElement && t.href && (!t.target || t.target === "_self") && t.origin === location.origin && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.defaultPrevented && s() && (e.preventDefault(), u("forward", t.href), o++, history.pushState({
+        index: o
+    }, "", t.href))
+}), window.addEventListener("popstate", () => {
+    if (!s()) {
+        location.reload();
+        return
+    }
+    const e = history.state?.index ?? o + 1,
+        t = e > o ? "forward" : "back";
+    u(t, location.href), o = e
+}), ["mouseenter", "touchstart", "focus"].forEach(e => {
+    document.addEventListener(e, t => {
+        if (t.target instanceof HTMLAnchorElement) {
+            let n = t.target;
+            n.origin === location.origin && n.pathname !== location.pathname && s() && E(n.pathname)
+        }
+    }, {
+        passive: !0,
+        capture: !0
+    })
+}));
 ```
-npm create astro@latest -- --template minimal
-```
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/minimal)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/minimal)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/minimal/devcontainer.json)
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:3000`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
